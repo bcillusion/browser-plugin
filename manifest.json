@@ -1,0 +1,37 @@
+{
+  "manifest_version": 2,
+  "name": "Block Website Extension",  
+  "description": "Block website Chrome extension.",
+  "author": "TMA Solution",
+  "version": "1.0",
+  "browser_action": {
+    "default_popup": "html/login.html",
+    "default_icon": "images/icon.png"
+  },
+  "background": {
+    "scripts": [
+      "scripts/background.js"
+    ],
+    "persistent": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "scripts/content_script.js"
+      ]
+    }
+  ],
+  "permissions": [
+    "storage",
+    "webRequestBlocking",
+    "webRequest",
+    "activeTab",
+    "tabs",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "devtools_page": "html/login.html"
+}
