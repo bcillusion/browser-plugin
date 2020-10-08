@@ -3,17 +3,17 @@ window.browser = (function () {
         window.browser ||
         window.chrome;
  })();
- 
+var config = browser.extension.getBackgroundPage().config
 document.getElementById("loginBtn").addEventListener("click", login);
 
 function login() {
     var email = document.getElementById("email").value;
     var password = document.getElementById("password").value;
-    fetch("http://localhost:8089/api/v1/login", {
+    fetch(config.loginAPI, {
         method: 'POST',
         headers: {
-            'lang': 'en-US',
-            'x-tenant': 'tmasolutions'
+            'lang': config.lang,
+            'x-tenant': config.tenant
         },
         body: JSON.stringify({
             email: email,
@@ -21,6 +21,7 @@ function login() {
         })
     })
         .then(res => {
+            
             if (res.status == 200)
                 return res.json()
             else
@@ -29,20 +30,19 @@ function login() {
         })
         .then(res => {
             if (res.msg == "ok") {
-                // chrome.storage.local.set({ token: res.data.access_token });
-                browser.storage.local.set({ 'token': res.data.access_token }, function() {
-                    alert(res.data.access_token);
+                browser.storage.sync.set({ 'token': res.data.access_token }, function() {
+                //alert(res.data.access_token);                                  
+                browser.extension.getBackgroundPage().getBlockListAndBlockDomain()
+                alert("Login successful!")
+                window.location.href = "../html/afterLogin.html";
                   });
 
-                // localStorage.setItem("token", res.data.access_token)
-                alert("Login successful!")
-                getBlockListAndBlockDomain()
-                // var a = document.createElement("a");
-                // a.href="../html/index.html"
-                // a.click();
-                window.location.href = "../html/index.html";
             }
             else {
+
+                browser.storage.sync.set({
+                    'token': "",
+                });
                 // localStorage.setItem("token", "")
                 //updateFilters([])
                 alert("Login failed!!!")
@@ -56,59 +56,57 @@ function login() {
 
 function logout() {
     browser.storage.sync.set({
-        token: "",
+        'token': "",
     });
 }
 
-function getBlockListAndBlockDomain() {
-    var listBlock = new Array()
+
+// function getBlockListAndBlockDomain() {
+//     var listBlock = new Array()
+//     browser.storage.sync.get(['token'], function (result) {
+//         fetch(config.blockListAPI, {
+//             headers: {
+//                 'Authorization': "Bearer " + result.token
+//             }
+//         }
+//         ).then(Response => {
+//             if (Response.status == 200)
+//                 return (Response.json())
+//             else
+//                 return ({ data: null })
+//         })
+//             .then(res => {
+//                 if (res.data != null) {
+//                     for (let i = 0; i < res.data.length; i++) {
+//                         listBlock[i] = "*://" + res.data[i].ip_address
+//                     }
+//                     return listBlock
+//                 }
+//                 else {
+//                     return []
+//                 }
+    
+//             })
+//             .then(res => {
+//                 if (res.length != 0)
+//                 {
+//                     alert("update filter")
+//                     updateFilters(res)
+//                 }
+                    
+//             })
+//     })   
+
+// }
+
+function checkLogin()
+{
     browser.storage.sync.get(['token'], function (result) {
-        fetch("http://localhost:8089/api/v1/blocked_list/", {
-            headers: {
-                'Authorization': "Bearer " + result.token
-            }
-        }
-        ).then(Response => {
-            if (Response.status == 200)
-                return (Response.json())
-            else
-                return ({ data: null })
-        })
-            .then(res => {
-                if (res.data != null) {
-                    for (let i = 0; i < res.data.length; i++) {
-                        listBlock[i] = "*://*." + res.data[i].ip_address + "/*"
-                    }
-                    return listBlock
-                }
-                else {
-                    return []
-                }
-    
-            })
-            .then(res => {
-                if (res.length != 0)
-                    updateFilters(res)
-            })
+        // alert("token: " + result.token)
+        if(result.token!="")
+            window.location.href = "../html/afterLogin.html";
     })
-    // var token = (localStorage.getItem("token") != "undefined" || localStorage.getItem("token") != "" ) ? localStorage.getItem("token") : ""
-    
-
 }
 
-//usage:
-function blockRequest(details) {
-    // if("chrome-extension://nkdhmfonnmhacncjkamhecgoimkbijlc/html/login.html"==(details.url))
-    // {
-    //     return{cancel:false};
-    // }
-    // else
-    return { cancel: true };
-}
-
-function updateFilters(listBlock) {
-    if (browser.webRequest.onBeforeRequest.hasListener(blockRequest)) {
-        browser.webRequest.onBeforeRequest.removeListener(blockRequest);
-    }
-    browser.webRequest.onBeforeRequest.addListener(blockRequest, { "urls": listBlock }, ['blocking']);
-}
+//logout()
+checkLogin()

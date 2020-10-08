@@ -5,12 +5,12 @@
   "author": "TMA Solution",
   "version": "1.0",
   "browser_action": {
-    "default_popup": "html/login.html",
+    "default_popup": "html/afterLogin.html",
     "default_icon": "images/icon.png"
   },
   "background": {
     "scripts": [
-      "scripts/background.js"
+      "scripts/background.js","scripts/config.js"
     ],
     "persistent": true
   },
@@ -31,7 +31,9 @@
     "activeTab",
     "tabs",
     "http://*/*",
-    "https://*/*"
+    "https://*/*",
+    "https://ajax.googleapis.com/"
+     
   ],
-  "devtools_page": "html/login.html"
+  "devtools_page": "html/index.html"
 }

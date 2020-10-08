@@ -5,13 +5,19 @@ window.browser = (function () {
  })();
 
 // var token = (localStorage.getItem("token") != "undefined" || localStorage.getItem("token") != "" ) ? localStorage.getItem("token") : ""
-
+var config = browser.extension.getBackgroundPage().config
 var listBlock = new Array()
 getBlockList_RenderTable()
 
 function getBlockList_RenderTable() {
     browser.storage.local.get(['token'], function (result) {
-        fetch("http://localhost:8089/api/v1/blocked_list/", {
+        if(result.token=="")
+        {
+            alert("Login to get block list!!!")
+            window.location.href = "../html/login.html";
+            return;
+        }
+        fetch(config.blockListAPI, {
             method: 'GET',
             headers: {
                 'Authorization': "Bearer " + result.token
@@ -33,9 +39,6 @@ function getBlockList_RenderTable() {
                 else {
                     alert("Login to get block list!!!")
                     window.location.href = "../html/login.html";
-                    // var a = document.createElement("a");
-                    //     a.href="../html/login.html"
-                    //     a.click();
                 }
     
             })
@@ -51,11 +54,11 @@ function renderTable(listBlock) {
 
     var tr = table.insertRow(-1);                   // TABLE ROW.
     var th1 = document.createElement("th");      // TABLE HEADER.
-    th1.innerHTML = "STT";
+    th1.innerHTML = "Index";
     tr.appendChild(th1);
 
     var th2 = document.createElement("th");      // TABLE HEADER.
-    th2.innerHTML = "Domain";
+    th2.innerHTML = "Url";
     tr.appendChild(th2);
 
     // ADD JSON DATA TO THE TABLE AS ROWS.
@@ -64,7 +67,7 @@ function renderTable(listBlock) {
         for (var j = 0; j < 2; j++) {
             var tabCell = tr.insertCell(-1);
             if (j == 0)
-                tabCell.innerHTML = i;
+                tabCell.innerHTML = i+1;
             else
                 tabCell.innerHTML = listBlock[i]
         }

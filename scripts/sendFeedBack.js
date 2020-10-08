@@ -33,5 +33,5 @@ function confirm() {
 
 document.getElementById("cancelBtn").addEventListener("click", cancel)
 function cancel() {
-    window.close();
+    history.back()
 }
