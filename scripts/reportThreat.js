@@ -4,17 +4,28 @@ window.browser = (function () {
         window.chrome;
 })();
 
+document.addEventListener('DOMContentLoaded', function() {
+    browser.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        var input = document.getElementById('threatUrl');
+        input.value = tabs[0].url
+        input.focus();
+        input.select();
+    })
+})
+
+
 document.getElementById("confirmBtn").addEventListener("click", confirm);
 function confirm() {
     browser.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        fetch("http://localhost:8089/api/blocked_list", {
+        fetch("http://localhost:8089/api/v1/report_threat", {
             method: 'POST',
             headers: {
                 'lang': 'en-US',
-                'x-tenant': 'tmasolutions'
+                'x-tenant': 'tmasolutions',
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                url: tabs[0].url,
+                url: document.getElementById('threatUrl').value,
             })
         })
             .then(res => {
@@ -24,7 +35,8 @@ function confirm() {
                     return { msg: null }
             })
             .then(res => {
-                alert(JSON.stringify(res))
+                alert(JSON.stringify(res.msg))
+                window.location.href = "../html/afterLogin.html";
             }).catch(err => {
                 alert(err)
             })

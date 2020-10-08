@@ -20,7 +20,8 @@ function getBlockList_RenderTable() {
         fetch(config.blockListAPI, {
             method: 'GET',
             headers: {
-                'Authorization': "Bearer " + result.token
+                'Authorization': "Bearer " + result.token,
+                'Content-Type': 'application/json',
             }
         }
         ).then(Response => {
