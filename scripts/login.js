@@ -13,7 +13,8 @@ function login() {
         method: 'POST',
         headers: {
             'lang': config.lang,
-            'x-tenant': config.tenant
+            'x-tenant': config.tenant,
+            'Content-Type': 'application/json',
         },
         body: JSON.stringify({
             email: email,
