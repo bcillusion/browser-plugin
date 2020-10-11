@@ -4,6 +4,7 @@ window.browser = (function () {
        window.chrome;
 })();
 var config = browser.extension.getBackgroundPage().config
+
 browser.runtime.onInstalled.addListener(function () {
    browser.storage.sync.set({ token: ''});
    localStorage.setItem("logs",new Date()+ ": Install plugin blockwebsite");
@@ -13,7 +14,7 @@ var listBlock = new Array()
 function getBlockListAndBlockDomain() {
    browser.storage.sync.get(['token'], function (result) {
       
-   fetch(config.blockListAPI, {
+   fetch(config.blockWordAPI, {
       headers: {
          'Authorization': "Bearer " + result.token
       }
@@ -31,6 +32,7 @@ function getBlockListAndBlockDomain() {
                listBlock.push(res.data[i].ip_address)
 
             browser.storage.sync.set({'ListBlock': listBlock});
+            //buildTables(listBlock)
             return listBlock
          }
          else
@@ -41,8 +43,13 @@ function getBlockListAndBlockDomain() {
 
       })
       .then(res => {
+          
          if (res.length != 0)
+         {
+            buildTables(res)
             updateFilters()
+         }
+            
       })
       .catch(err=>{alert(err)})
    })
@@ -62,7 +69,7 @@ function updateFilters() {
 function blockRequest(details) {
    
    let keyWord="zing"
-   let blockKeyword = false
+   let blockKeyword = true
    if(!blockKeyword)
       for(let i = 0;i<listBlock.length;i++)
       {
@@ -80,17 +87,21 @@ function blockRequest(details) {
          }
       }
    else
-      for(let i = 0;i<listBlock.length;i++)
-      {
-         var reg = new RegExp(keyWord); 
-         if(details.url.match(reg)!=null)
-         {            
-            //alert(details.url +"contain keyword blocked: "+keyWord)
-            data = localStorage.getItem("logs")+"\n" +new Date()+": Blocked: "+details.url
-            localStorage.setItem("logs",data)
-            return { cancel: true };
-         }
-      }
+   {
+      if(search(details.url).length!=0)
+         return { cancel: true };
+   }
+      // for(let i = 0;i<listBlock.length;i++)
+      // {
+      //    var reg = new RegExp(keyWord); 
+      //    if(details.url.match(reg)!=null)
+      //    {            
+      //       //alert(details.url +"contain keyword blocked: "+keyWord)
+      //       data = localStorage.getItem("logs")+"\n" +new Date()+": Blocked: "+details.url
+      //       localStorage.setItem("logs",data)
+      //       return { cancel: true };
+      //    }
+      // }
         
       // browser.storage.sync.get(['ListBlock'], function (result) {
       //    for(let i = 0;i<result.ListBlock.length;i++)
@@ -119,6 +130,111 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
    }
 });
 
-//getBlockListAndBlockDomain()
+
+
+
+
+
+
+
+
+
+var GotoFn ={
+   0: {}
+};
+var Output =[]
+var Failure=[]
+
+function buildTables(keywords) {
+      var gotoFn = {
+          0: {}
+      };
+      var output = {};
+
+      var state = 0;
+      keywords.forEach(function(word) {
+         word=word.toString();
+          var curr = 0;
+          for (var i=0; i<word.length; i++) {
+              var l = word[i];
+              if (gotoFn[curr] && l in gotoFn[curr]) {
+                  curr = gotoFn[curr][l];
+              }
+              else {
+                  state++;
+                  gotoFn[curr][l] = state;
+                  gotoFn[state] = {};
+                  curr = state;
+                  output[state] = [];
+              }
+          }
+
+          output[curr].push(word);
+      });
+
+      var failure = {};
+      var xs = [];
+
+      // f(s) = 0 for all states of depth 1 (the ones from which the 0 state can transition to)
+      for (var l in gotoFn[0]) {
+          var state = gotoFn[0][l];
+          failure[state] = 0;
+          xs.push(state);
+      }
+
+      while (xs.length) {
+          var r = xs.shift();
+          // for each symbol a such that g(r, a) = s
+          for (var l in gotoFn[r]) {
+              var s = gotoFn[r][l];
+              xs.push(s);
+
+              // set state = f(r)
+              var state = failure[r];
+              while(state > 0 && !(l in gotoFn[state])) {
+                  state = failure[state];
+              }
+
+              if (l in gotoFn[state]) {
+                  var fs = gotoFn[state][l];
+                  failure[s] = fs;
+                  output[s] = output[s].concat(output[fs]);
+              }
+              else {
+                  failure[s] = 0;
+              }
+          }
+      }
+
+      GotoFn = gotoFn;
+      Output = output;
+      Failure = failure;
+  };
+
+
+   function search(string) {
+   var state = 0;
+   var results = [];
+   for (var i=0; i<string.length; i++) {
+       var l = string[i];
+       while (state > 0 && !(l in GotoFn[state])) {
+           state = Failure[state];
+       }
+       if (!(l in GotoFn[state])) {
+           continue;
+       }
+
+       state = GotoFn[state][l];
+
+       if (Output[state].length) {
+           var foundStrs = Output[state];
+           results.push([i, foundStrs]);
+       }
+   }
+
+   return results;
+};
+
+
 
 
