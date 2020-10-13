@@ -3,7 +3,7 @@ window.browser = (function () {
         window.browser ||
         window.chrome;
  })();
-
+var config = browser.extension.getBackgroundPage().config
 document.addEventListener('DOMContentLoaded', function() {
     browser.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         var input = document.getElementById('threatUrl');
@@ -16,11 +16,11 @@ document.addEventListener('DOMContentLoaded', function() {
 document.getElementById("confirmBtn").addEventListener("click", confirm);
 function confirm() {
     browser.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        fetch("http://localhost:8089/api/v1/sendFeedBack", {
+        fetch(config.sendFeedBackAPI, {
             method: 'POST',
             headers: {
-                'lang': 'en-US',
-                'x-tenant': 'tmasolutions',
+                'lang': config.lang,
+                'x-tenant': config.tenant,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({

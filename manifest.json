@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Block Website Extension",  
-  "description": "Block website Chrome extension.",
+  "description": "Block website extension.",
   "author": "TMA Solution",
   "version": "1.0",
   "browser_action": {
@@ -10,7 +10,7 @@
   },
   "background": {
     "scripts": [
-      "scripts/background.js","scripts/config.js"
+      "scripts/background.js","scripts/config.js","scripts/aho.js"
     ],
     "persistent": true
   },
